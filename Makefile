@@ -3,7 +3,7 @@ CC=gcc
 CFLAGS=-Wall -O3
 
 all: flex bison
-	$(CC) $(CFLAGS) lex.yy.c hasm.tab.c -lfl -o $(TARGET).out
+	$(CC) $(CFLAGS) lex.yy.c hasm.tab.c hasm.c -lfl -o $(TARGET).out
 
 flex:
 	flex $(TARGET).l
