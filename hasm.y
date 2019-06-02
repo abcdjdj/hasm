@@ -21,7 +21,7 @@ int isFirstPass;
 %%
 
 Start: InstructionList;
-InstructionList: Instruction InstructionList |;
+InstructionList: InstructionList Instruction |;
 Instruction : A_Instruction { ++instructionCount; }
             | C_Instruction { ++instructionCount; }
             | Label;
