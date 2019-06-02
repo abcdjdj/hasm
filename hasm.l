@@ -1,5 +1,6 @@
 %{
 #include "hasm.tab.h"
+char labelID[2048];
 %}
 
 LETTER  [a-zA-Z]
@@ -43,7 +44,7 @@ SCREEN { yylval = 16384; return NUMBER; }
 KBD { yylval = 24576; return NUMBER; }
 R{NUMBER} { sscanf(yytext + 1, "%d", &yylval); return NUMBER; }
 
-{ID} { printf("ID = %s\n", yytext); }
+{ID} { strcpy(labelID, yytext); return ID; }
 
 "//"[^\n]* {}
 

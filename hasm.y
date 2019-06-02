@@ -6,6 +6,10 @@
 void yyerror(const char *msg);
 int yylex();
 extern FILE *yyout;
+extern char labelID[2048];
+//#define YYDEBUG 1
+
+int isFirstPass;
 %}
 
 %token NUMBER ID REGISTER JUMP
@@ -18,18 +22,29 @@ extern FILE *yyout;
 
 Start: InstructionList;
 InstructionList: Instruction InstructionList |;
-Instruction : A_Instruction | C_Instruction;
+Instruction : A_Instruction { ++instructionCount; }
+            | C_Instruction { ++instructionCount; }
+            | Label;
 
-A_Instruction: '@' Number {
-    setRegisterA($2);
-    fprintf(yyout, "%s\n", opcode);
-    ++instructionCount;
-    RESET_OPCODE();
+Label: '(' ID ')' {
+    if(isFirstPass) {
+        // insert into symbol table
+        printf("%s : %d\n", labelID, instructionCount);
+    }
 };
 
-C_Instruction: Dest '=' Comp ';' Jump { fprintf(yyout, "%s\n", opcode); ++instructionCount;    RESET_OPCODE(); }
-             | Comp ';' Jump          { fprintf(yyout, "%s\n", opcode); ++instructionCount;    RESET_OPCODE(); }
-             | Dest '=' Comp          { fprintf(yyout, "%s\n", opcode); ++instructionCount;    RESET_OPCODE(); };
+A_Instruction: '@' Number {
+    if(isFirstPass) break;
+    setRegisterA($2);
+    fprintf(yyout, "%s\n", opcode);
+    RESET_OPCODE();
+}   | '@' ID {
+        if(isFirstPass) break;
+};
+
+C_Instruction: Dest '=' Comp ';' Jump { if(isFirstPass) break;  fprintf(yyout, "%s\n", opcode); RESET_OPCODE(); }
+             | Comp ';' Jump          { if(isFirstPass) break;  fprintf(yyout, "%s\n", opcode); RESET_OPCODE(); }
+             | Dest '=' Comp          { if(isFirstPass) break;  fprintf(yyout, "%s\n", opcode); RESET_OPCODE(); };
                 
 Dest: Register { setDest($1); };
 
@@ -46,20 +61,25 @@ Comp: Assign_Constant
     | Register_Bitwise_Or
 
 Assign_Constant: Number {
+    if(isFirstPass) break;
     assignConstant($1);
 };
 
 Assign_Register: Register {
+    if(isFirstPass) break;
     assignRegister($1);
 };
 
 Assign_Register_Unary: '!' Register {
+    if(isFirstPass) break;
     assignRegisterUnary($2, '!');
 }   | '-' Register {
+    if(isFirstPass) break;
     assignRegisterUnary($2, '-');
 };
 
 Register_Increment: Register '+' Number {
+    if(isFirstPass) break;
     if($3 != 1) {
         // Error
         printf("Error\n");
@@ -69,6 +89,7 @@ Register_Increment: Register '+' Number {
 };
 
 Register_Decrement: Register '-' Number {
+    if(isFirstPass) break;
     if($3 != 1) {
         // Error
         printf("Error\n");
@@ -78,18 +99,22 @@ Register_Decrement: Register '-' Number {
 };
 
 Register_Addition: Register '+' Register {
+    if(isFirstPass) break;
     registerAddition($1, $3);
 };
 
 Register_Subtraction: Register '-' Register {
+    if(isFirstPass) break;
     registerSubtraction($1, $3);
 };
 
 Register_Bitwise_And: Register '&' Register {
+    if(isFirstPass) break;
     registerBitwiseAnd($1, $3);
 };
 
 Register_Bitwise_Or: Register '|' Register {
+    if(isFirstPass) break;
     registerBitwiseOr($1, $3);
 };
 
@@ -108,5 +133,7 @@ void yyerror(const char *msg)
 
 int main(int argc, char **argv)
 {
+    //yydebug = 1;
+    isFirstPass = 0;
     yyparse();
 }
