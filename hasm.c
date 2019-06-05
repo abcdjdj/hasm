@@ -32,7 +32,7 @@ void assignRegister(int number)
         memcpy(opcode + 3, "0" "110000", 1 + 6);
         break;
     case M:
-        memcpy(opcode + 3, "1" "001100", 1 + 6);
+        memcpy(opcode + 3, "1" "110000", 1 + 6);
         break;
     }
     memcpy(opcode, "111", 3);
