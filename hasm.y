@@ -50,9 +50,9 @@ C_Instruction: Dest '=' Comp ';' Jump { if(isFirstPass) break;  fprintf(yyout, "
              | Comp ';' Jump          { if(isFirstPass) break;  fprintf(yyout, "%s\n", opcode); RESET_OPCODE(); }
              | Dest '=' Comp          { if(isFirstPass) break;  fprintf(yyout, "%s\n", opcode); RESET_OPCODE(); };
                 
-Dest: Register { setDest($1); };
+Dest: Register { if(isFirstPass) break; setDest($1); };
 
-Jump: Branch { setJump($1); };
+Jump: Branch { if(isFirstPass) break; setJump($1); };
 
 Comp: Assign_Constant
     | Assign_Register
