@@ -2,12 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "hasm.h"
+#include "symbol_table.h"
 
 void yyerror(const char *msg);
 int yylex();
 extern FILE *yyout;
+extern FILE *yyin;
 extern char labelID[2048];
-//#define YYDEBUG 1
 
 int isFirstPass;
 %}
@@ -29,7 +30,7 @@ Instruction : A_Instruction { ++instructionCount; }
 Label: '(' ID ')' {
     if(isFirstPass) {
         // insert into symbol table
-        printf("%s : %d\n", labelID, instructionCount);
+        insertSymbol(labelID, instructionCount);
     }
 };
 
@@ -40,6 +41,9 @@ A_Instruction: '@' Number {
     RESET_OPCODE();
 }   | '@' ID {
         if(isFirstPass) break;
+        setRegisterA(getSymbolAddress(labelID));
+        fprintf(yyout, "%s\n", opcode);
+        RESET_OPCODE();
 };
 
 C_Instruction: Dest '=' Comp ';' Jump { if(isFirstPass) break;  fprintf(yyout, "%s\n", opcode); RESET_OPCODE(); }
@@ -133,7 +137,14 @@ void yyerror(const char *msg)
 
 int main(int argc, char **argv)
 {
-    //yydebug = 1;
+    yyin = fopen(argv[1], "r");
+    isFirstPass = 1;
+    yyparse();
+    fclose(yyin);
+
+    yyin = fopen(argv[1], "r");
     isFirstPass = 0;
     yyparse();
+
+    //print_table();
 }

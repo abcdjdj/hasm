@@ -1,6 +1,8 @@
 %{
 #include "hasm.tab.h"
+#include "symbol_table.h"
 char labelID[2048];
+extern int isFirstPass;
 %}
 
 LETTER  [a-zA-Z]
@@ -44,7 +46,20 @@ SCREEN { yylval = 16384; return NUMBER; }
 KBD { yylval = 24576; return NUMBER; }
 R{NUMBER} { sscanf(yytext + 1, "%d", &yylval); return NUMBER; }
 
-{ID} { strcpy(labelID, yytext); return ID; }
+{ID} {
+    if(isFirstPass) {
+        strcpy(labelID, yytext);
+        return ID;
+    } else {
+        /* Second pass : if the identifier is not
+         * in the symbol table, assign it an address
+         * from RAM[16] */
+        if(getSymbolAddress(yytext) == -1)
+            insertSymbol(yytext, nextFreeAddr++);
+        strcpy(labelID, yytext);
+        return ID;
+    }
+}
 
 "//"[^\n]* {}
 
