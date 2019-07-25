@@ -137,7 +137,16 @@ void yyerror(const char *msg)
 
 int main(int argc, char **argv)
 {
+    if(argc != 2) {
+        printf("Usage : ./hasm.out <asm file>\n");
+        return 0;
+    }
+
     yyin = fopen(argv[1], "r");
+    if(!yyin) {
+        printf("Error opening file \'%s\'\n", argv[1]);
+        return 0;
+    }
     isFirstPass = 1;
     yyparse();
     fclose(yyin);
